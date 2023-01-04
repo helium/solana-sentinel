@@ -2,7 +2,8 @@ import express, { Request, Response } from 'express'
 
 export const statusRouter = express.Router()
 
-type MigrationStatus = 'not_started' | 'in_progress' | 'complete'
+const MigrationStatusKeys = ['not_started', 'in_progress', 'complete'] as const
+export type MigrationStatus = typeof MigrationStatusKeys[number]
 
 export type Status = {
   migrationStatus: MigrationStatus
@@ -13,7 +14,7 @@ export type Status = {
 statusRouter.get('/', async (_req: Request, res: Response) => {
   const migrationStatus = (process.env.MIGRATION_STATUS ||
     'not_started') as MigrationStatus
-  if (!['not_started', 'in_progress', 'completed'].includes(migrationStatus)) {
+  if (!MigrationStatusKeys.includes(migrationStatus)) {
     throw new Error('Invalid migration status')
   }
 
@@ -34,4 +35,23 @@ statusRouter.get('/', async (_req: Request, res: Response) => {
   }
 
   res.status(200).send(status)
+})
+
+statusRouter.get('/vars', async (_req: Request, res: Response) => {
+  const vars = {
+    mints: {
+      mobile: process.env.MOBILE_MINT,
+      iot: process.env.IOT_MINT,
+      hnt: process.env.HNT_MINT,
+      dc: process.env.DC_MINT,
+    },
+    metadata_urls: {
+      mobile: process.env.MOBILE_METADATA_URL,
+      iot: process.env.IOT_METADATA_URL,
+      hnt: process.env.HNT_METADATA_URL,
+      dc: process.env.DC_METADATA_URL,
+    },
+  }
+
+  res.status(200).send(vars)
 })
