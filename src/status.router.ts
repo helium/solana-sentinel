@@ -5,6 +5,9 @@ export const statusRouter = express.Router()
 const MigrationStatusKeys = ['not_started', 'in_progress', 'complete'] as const
 export type MigrationStatus = typeof MigrationStatusKeys[number]
 
+const ClusterKeys = ['devnet', 'testnet', 'mainnet-beta'] as const
+export type Cluster = typeof ClusterKeys[number]
+
 export type Status = {
   migrationStatus: MigrationStatus
   minimumVersions: Record<string, string>
@@ -15,7 +18,7 @@ statusRouter.get('/', async (_req: Request, res: Response) => {
   const migrationStatus = (process.env.MIGRATION_STATUS ||
     'not_started') as MigrationStatus
   if (!MigrationStatusKeys.includes(migrationStatus)) {
-    throw new Error('Invalid migration status')
+    return res.status(400).send({ message: 'Invalid migration status' })
   }
 
   const minimumVersions =
@@ -37,20 +40,28 @@ statusRouter.get('/', async (_req: Request, res: Response) => {
   res.status(200).send(status)
 })
 
-statusRouter.get('/vars', async (_req: Request, res: Response) => {
+statusRouter.get('/vars', async (req: Request, res: Response) => {
+  let cluster = req.query['cluster'] as Cluster
+  if (!cluster) {
+    cluster = 'mainnet-beta'
+  }
+
+  if (!ClusterKeys.includes(cluster)) {
+    return res.status(400).send({ message: 'Unknown cluster' })
+  }
+
+  const getEnvVars = (varName: 'IOT' | 'MOBILE' | 'HNT' | 'DC') => {
+    const postfix = cluster !== 'mainnet-beta' ? cluster.toUpperCase() : ''
+    const metadata_url = process.env[`${varName}_METADATA_URL_${postfix}`]
+    const mint = process.env[`${varName}_MINT_${postfix}`]
+    return { metadata_url, mint }
+  }
+
   const vars = {
-    mints: {
-      mobile: process.env.MOBILE_MINT,
-      iot: process.env.IOT_MINT,
-      hnt: process.env.HNT_MINT,
-      dc: process.env.DC_MINT,
-    },
-    metadata_urls: {
-      mobile: process.env.MOBILE_METADATA_URL,
-      iot: process.env.IOT_METADATA_URL,
-      hnt: process.env.HNT_METADATA_URL,
-      dc: process.env.DC_METADATA_URL,
-    },
+    mobile: getEnvVars('MOBILE'),
+    iot: getEnvVars('IOT'),
+    hnt: getEnvVars('HNT'),
+    dc: getEnvVars('DC'),
   }
 
   res.status(200).send(vars)
