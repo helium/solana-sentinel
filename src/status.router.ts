@@ -12,6 +12,7 @@ export type Status = {
   migrationStatus: MigrationStatus
   minimumVersions: Record<string, string>
   finalBlockHeight: number | null
+  treasuryWarning: boolean
 }
 
 statusRouter.get('/', async (_req: Request, res: Response) => {
@@ -31,7 +32,12 @@ statusRouter.get('/', async (_req: Request, res: Response) => {
     ? parseInt(process.env.FINAL_BLOCK_HEIGHT)
     : null
 
+  const treasuryWarning = process.env.TREASURY_WARNING
+    ? process.env.TREASURY_WARNING === 'true'
+    : true
+
   const status: Status = {
+    treasuryWarning,
     migrationStatus,
     minimumVersions,
     finalBlockHeight,
