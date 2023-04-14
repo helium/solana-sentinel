@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-
+import { HNT_MINT, IOT_MINT, MOBILE_MINT, DC_MINT } from '@helium/spl-utils'
 export const statusRouter = express.Router()
 
 const MigrationStatusKeys = ['not_started', 'in_progress', 'complete'] as const
@@ -56,18 +56,11 @@ statusRouter.get('/vars', async (req: Request, res: Response) => {
     return res.status(400).send({ message: 'Unknown cluster' })
   }
 
-  const getEnvVars = (varName: 'IOT' | 'MOBILE' | 'HNT' | 'DC') => {
-    const postfix = cluster !== 'mainnet-beta' ? cluster.toUpperCase() : ''
-    const metadata_url = process.env[`${varName}_METADATA_URL_${postfix}`]
-    const mint = process.env[`${varName}_MINT_${postfix}`]
-    return { metadata_url, mint }
-  }
-
   const vars = {
-    mobile: getEnvVars('MOBILE'),
-    iot: getEnvVars('IOT'),
-    hnt: getEnvVars('HNT'),
-    dc: getEnvVars('DC'),
+    mobile: MOBILE_MINT.toBase58(),
+    iot: IOT_MINT.toBase58(),
+    hnt: HNT_MINT.toBase58(),
+    dc: DC_MINT.toBase58(),
   }
 
   res.status(200).send(vars)
