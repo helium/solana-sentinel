@@ -10,6 +10,9 @@
   },
   "license": "APACHE-2.0",
   "dependencies": {
+    "@helium/spl-utils": "^0.0.52",
+    "@metaplex-foundation/mpl-token-metadata": "^2.9.1",
+    "@solana/spl-account-compression": "^0.1.7",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
